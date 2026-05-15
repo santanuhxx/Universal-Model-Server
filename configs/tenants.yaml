@@ -1,0 +1,16 @@
+tenants:
+  default:
+    max_requests_per_second: 100
+    sla_override_ms: null
+
+  team_a:
+    max_requests_per_second: 200
+    sla_override_ms: null
+
+  team_b:
+    max_requests_per_second: 50
+    sla_override_ms: 300
+
+  team_c:
+    max_requests_per_second: 500
+    sla_override_ms: 50

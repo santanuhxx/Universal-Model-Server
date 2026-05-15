@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package modelserving;
+
+service ModelServing {
+  rpc Infer (InferRequest) returns (InferResponse);
+  rpc Health (HealthRequest) returns (HealthResponse);
+  rpc ListModels (ListModelsRequest) returns (ListModelsResponse);
+}
+
+message InferRequest {
+  string request_id  = 1;
+  string model_name  = 2;
+  map<string, FloatArray> inputs = 3;
+  string priority    = 4;
+  string tenant_id   = 5;
+  int32  deadline_ms = 6;
+}
+
+message FloatArray {
+  repeated float values = 1;
+}
+
+message InferResponse {
+  string request_id  = 1;
+  string model_name  = 2;
+  map<string, FloatArray> outputs = 3;
+  string status      = 4;
+  float  latency_ms  = 5;
+  string tenant_id   = 6;
+  string served_by   = 7;
+}
+
+message HealthRequest {}
+message HealthResponse {
+  string status  = 1;
+  string version = 2;
+  float  uptime  = 3;
+}
+
+message ListModelsRequest {}
+message ListModelsResponse {
+  repeated string models = 1;
+}

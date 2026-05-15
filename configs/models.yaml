@@ -1,0 +1,12 @@
+models:
+  - name: "echo_model"
+    runtime: "onnx"
+    model_path: "models/echo.onnx"
+    device: "cpu"
+    max_batch_size: 32
+
+  - name: "classifier"
+    runtime: "pytorch"
+    model_path: "models/classifier.pt"
+    device: "cpu"
+    max_batch_size: 16
