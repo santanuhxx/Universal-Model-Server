@@ -2,11 +2,13 @@ models:
   - name: "echo_model"
     runtime: "onnx"
     model_path: "models/echo.onnx"
-    device: "cpu"
+    device: "cpu"            # change to cuda:0 if GPU is available
     max_batch_size: 32
+    shadow_model: null
 
   - name: "classifier"
     runtime: "pytorch"
     model_path: "models/classifier.pt"
-    device: "cpu"
+    device: "cpu"            # change to cuda:0 if GPU is available
     max_batch_size: 16
+    shadow_model: null

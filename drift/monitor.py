@@ -1,6 +1,5 @@
 from drift.detector import DriftDetector, DriftAlert
 from typing import Any
-import asyncio
 
 
 class DriftMonitor:

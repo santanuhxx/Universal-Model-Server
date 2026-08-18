@@ -40,8 +40,8 @@ class ONNXRuntime(BaseRuntime):
 
         start = time.perf_counter()
 
-        def _run():                                              # 8 spaces
-            feed = {                                            # 12 spaces
+        def _run():
+            feed = {
                 name: np.array(inputs[name], dtype=np.float32)
                 for name in self._input_names
                 if name in inputs

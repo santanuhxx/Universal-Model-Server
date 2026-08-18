@@ -135,7 +135,7 @@ class ModelOptimizer:
         output_path: str,
         level: int,
     ) -> None:
-        """ONNX Runtime graph optimization।"""
+        """Apply ONNX Runtime graph optimization at the specified level."""
         import onnxruntime as ort
 
         sess_options = ort.SessionOptions()

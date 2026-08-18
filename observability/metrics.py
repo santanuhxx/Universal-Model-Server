@@ -35,7 +35,7 @@ LOADED_MODELS = Gauge(
 
 @router.get("/metrics")
 async def metrics():
-    """Prometheus scrape endpoint।"""
+    """Prometheus metrics scrape endpoint."""
     return Response(
         content=generate_latest(),
         media_type=CONTENT_TYPE_LATEST,

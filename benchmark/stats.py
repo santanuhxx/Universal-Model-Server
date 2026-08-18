@@ -7,7 +7,7 @@ from collections import deque
 @dataclass
 class RequestStat:
     latency_ms: float
-    status: str      
+    status: str
     model_name: str
     priority: str
     timestamp: float = field(default_factory=time.time)

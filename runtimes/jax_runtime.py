@@ -5,15 +5,14 @@ from core.schemas import ModelInfo
 from runtimes.base import BaseRuntime
 
 
-class JAXRuntime(BaseRuntime): 
+class JAXRuntime(BaseRuntime):
     def __init__(self, model_info: ModelInfo):
         super().__init__(model_info)
-        self._predict_fn = None
+        self._params = None
 
     async def load(self) -> None:
         try:
             import jax
-            import jax.numpy as jnp
             import pickle
 
             loop = asyncio.get_event_loop()
@@ -36,7 +35,7 @@ class JAXRuntime(BaseRuntime):
         start = time.perf_counter()
 
         if self._params is None:
-            # Stub — identity function
+            # Stub — identity passthrough when JAX is unavailable
             result = {k: v for k, v in inputs.items()}
         else:
             import jax.numpy as jnp
@@ -44,7 +43,6 @@ class JAXRuntime(BaseRuntime):
 
             def _run():
                 arr = jnp.array(list(inputs.values())[0])
-                # Real: output = self._model_fn(self._params, arr)
                 return {"output": arr.tolist()}
 
             result = await loop.run_in_executor(None, _run)
@@ -55,4 +53,3 @@ class JAXRuntime(BaseRuntime):
 
     async def unload(self) -> None:
         self._params = None
-        self._predict_fn = None

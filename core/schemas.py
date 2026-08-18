@@ -26,7 +26,7 @@ class RequestStatus(str, Enum):
 # ── Request ────────────────────────────────────────
 
 class InferenceRequest(BaseModel):
-    model_config = ConfigDict(protected_namespaces=())  # ← fix
+    model_config = ConfigDict(protected_namespaces=())
 
     request_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     model_name: str = Field(..., description="Name of the registered model in the registry")

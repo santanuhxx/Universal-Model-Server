@@ -25,7 +25,7 @@ class SLAPriorityQueue:
         self._queue: asyncio.PriorityQueue = asyncio.PriorityQueue(
             maxsize=max_size
         )
-        self._stats: dict[str, int] = {}  
+        self._stats: dict[str, int] = {}
 
     async def enqueue(self, request: InferenceRequest) -> None:
         item = QueueItem(

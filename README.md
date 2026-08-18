@@ -144,13 +144,8 @@ git clone https://github.com/your-username/universal-model-server.git
 cd universal-model-server
 
 # Create virtual environment
-python -m venv venv
-
-# Activate — Mac/Linux
+python3 -m venv venv
 source venv/bin/activate
-
-# Activate — Windows
-venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
@@ -861,7 +856,7 @@ docker-compose -f docker/docker-compose.yml up
 pytest tests/ -v
 
 # By module
-pytest tests/test_runtime.py -v        # 3 tests  — schemas + runtimes
+pytest tests/test_runtime.py -v        # 3 tests  — schemas + runtime factory
 pytest tests/test_scheduler.py -v      # 5 tests  — queue + rate limiter
 pytest tests/test_pipeline.py -v       # 3 tests  — DAG + shadow
 pytest tests/test_optimizer.py -v      # 4 tests  — quantization + cache

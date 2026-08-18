@@ -1,6 +1,5 @@
 import time
 from collections import defaultdict, deque
-from core.config import get_settings
 
 class TenantLimiter:
     def __init__(

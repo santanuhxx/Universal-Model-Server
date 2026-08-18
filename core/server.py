@@ -2,6 +2,7 @@ from fastapi import FastAPI, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from typing import Annotated
+
 from core.config import get_settings
 from core.schemas import InferenceRequest
 from core.registry import get_registry
@@ -76,19 +77,15 @@ def create_app() -> FastAPI:
         x_priority: Annotated[str | None, Header()] = None,
         api_key: str = Depends(verify_api_key),
     ):
-        """
-        Main inference endpoint।
-        Header: X-API-Key (required if API_KEY_ENABLED=true)
-        Header: X-Priority — urgent | normal | batch (optional override)
-        """
         result = await get_engine().handle(
             request, priority_hint=x_priority
         )
         _tracker.record(RequestStat(
             latency_ms=result.latency_ms
                 if hasattr(result, "latency_ms") else 0.0,
-            status=result.status.value
-                if hasattr(result, "status") else "error",
+            status="success"                         
+                if hasattr(result, "model_name") 
+                else "error",
             model_name=request.model_name,
             priority=request.priority.value,
         ))
@@ -143,33 +140,33 @@ def create_app() -> FastAPI:
 
     @app.get("/models", tags=["Registry"])
     async def list_models():
-        """Available models।"""
+        """List available models."""
         return {"models": get_registry().list_models()}
 
     @app.get("/pipelines", tags=["Pipeline"])
     async def pipelines():
-        """Available pipelines।"""
+        """List registered pipelines."""
         return {"pipelines": list_pipelines()}
 
     # ── Scheduler ──────────────────────────────────────────
 
     @app.get("/queue/stats", tags=["Scheduler"])
     async def queue_stats():
-        """Current queue depth + tenant counts।"""
+        """Current queue depth and per-tenant request counts."""
         return get_engine().queue.stats
 
     # ── Shadow ─────────────────────────────────────────────
 
     @app.get("/shadow/summary", tags=["Shadow"])
     async def shadow_summary():
-        """Champion vs challenger comparison।"""
+        """Champion vs challenger latency comparison."""
         return get_shadow_manager().get_summary()
 
     # ── Benchmark ──────────────────────────────────────────
 
     @app.get("/benchmark/stats", tags=["Benchmark"])
     async def benchmark_stats():
-        """Live P50 / P95 / P99 latency stats।"""
+        """Live P50 / P95 / P99 latency stats."""
         return _tracker.summary()
 
     # ── Drift ──────────────────────────────────────────────

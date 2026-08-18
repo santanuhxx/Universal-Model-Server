@@ -38,8 +38,8 @@ class BaseRuntime(ABC):
         print(f"🗑️  [{self.model_info.name}] unloaded")
 
     def _validate_loaded(self):
-     if not self.is_loaded:
-        raise RuntimeError(
-            f"Model '{self.model_info.name}' is not loaded. "
-            f"Use 'async with runtime:' or call load() first."
-        )
+        if not self.is_loaded:
+            raise RuntimeError(
+                f"Model '{self.model_info.name}' is not loaded. "
+                f"Use 'async with runtime:' or call load() first."
+            )

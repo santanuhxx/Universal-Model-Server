@@ -1,5 +1,4 @@
 from pipeline.dag import PipelineDAG
-from typing import Callable
 
 _pipelines: dict[str, PipelineDAG] = {}
 

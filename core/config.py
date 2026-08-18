@@ -39,6 +39,10 @@ class Settings(BaseSettings):
     api_key_enabled: bool = False
     api_keys: str = ""
 
+
+    # Grafana
+    grafana_admin_password: str = "admin"
+
     @property
     def valid_api_keys(self) -> set[str]:
         if not self.api_keys:
