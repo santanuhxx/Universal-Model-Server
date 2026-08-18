@@ -3,14 +3,15 @@
 # 🖥️ Universal Model Server
 
 **Production-grade · Framework-agnostic · ML Inference Platform**
-Open-source alternative to NVIDIA Triton Inference Server
+Inspired by Triton · Built for flexibility · Open source
 
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.111+-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.136.1-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.13.0-EE4C2C?style=for-the-badge&logo=pytorch&logoColor=white)](https://pytorch.org)
+[![CUDA](https://img.shields.io/badge/CUDA-13.0-76B900?style=for-the-badge&logo=nvidia&logoColor=white)](https://developer.nvidia.com/cuda-toolkit)
 [![Tests](https://img.shields.io/badge/Tests-32%20passed-brightgreen?style=for-the-badge&logo=pytest&logoColor=white)](tests/)
 [![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
 [![Docker](https://img.shields.io/badge/Docker-ready-2496ED?style=for-the-badge&logo=docker&logoColor=white)](docker/)
-[![gRPC](https://img.shields.io/badge/gRPC-supported-blueviolet?style=for-the-badge)](grpc/)
 
 <br/>
 
@@ -143,52 +144,38 @@ UMS handles all of this — and adds INT8 quantization, statistical benchmarking
 git clone https://github.com/your-username/universal-model-server.git
 cd universal-model-server
 
-# Create virtual environment
-python3 -m venv venv
-source venv/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
 
-# Install dependencies
+pip install --upgrade pip
+
+# PyTorch with CUDA 13.0
+pip install torch \
+  --index-url https://download.pytorch.org/whl/cu130
+
 pip install -r requirements.txt
 ```
-
-### Step 2 — Setup Environment
-
-```bash
-# Copy example env file
-cp .env.example .env
-```
-
-Open `.env` and fill in your values (defaults work for local development).
 
 ### Step 3 — Create Test Models
 
 ```bash
-pip install scikit-learn skl2onnx
-python scripts/create_dummy_models.py
-```
-
-Output:
-```
-Creating dummy ONNX model...
-✅ models/echo.onnx created!
-Creating dummy PyTorch model...
-✅ models/classifier.pt created!
+python3 scripts/create_dummy_models.py
 ```
 
 ### Step 4 — Start the Server
 
 ```bash
-python main.py
+python3 main.py
 ```
 
 Output:
 ```
 🚀 Universal Model Server v0.1.0 starting...
 🔭 Tracing initialized
-📦 Registered model: 'echo_model' [onnx on cpu]
-📦 Registered model: 'classifier' [pytorch on cpu]
+📦 Registered model: 'echo_model' [onnx on cuda:0]
+📦 Registered model: 'classifier' [pytorch on cuda:0]
 🔄 Loading registered models...
-⚡ fresh | standard | 0.001MB → 0.001MB | 0.45s
+⚡ fresh | standard | optimized in 0.45s
 ✅ Loaded: echo_model
 👁️  Drift monitoring enabled: 'echo_model'
 ✅ 2 model(s) ready.
@@ -416,13 +403,17 @@ curl http://localhost:8000/benchmark/stats
 ```
 ```json
 {
-  "total_requests": 1500,
-  "success_rate_pct": 99.8,
-  "p50_ms": 1.2,
-  "p95_ms": 4.8,
-  "p99_ms": 12.3,
-  "throughput_rps": 342.5,
-  "sla_breach_100ms": 0.2,
+  "total_requests": 1,
+  "success_count": 1,
+  "error_count": 0,
+  "success_rate_pct": 100.0,
+  "p50_ms": 0.73,
+  "p95_ms": 0.73,
+  "p99_ms": 0.73,
+  "min_ms": 0.73,
+  "max_ms": 0.73,
+  "throughput_rps": 0.02,
+  "sla_breach_100ms": 0.0,
   "sla_breach_500ms": 0.0
 }
 ```
@@ -433,8 +424,8 @@ curl http://localhost:8000/queue/stats
 ```
 ```json
 {
-  "queue_size": 3,
-  "tenant_counts": {"team_a": 150, "team_b": 89}
+  "queue_size": 0,
+  "tenant_counts": {}
 }
 ```
 
@@ -445,14 +436,29 @@ curl http://localhost:8000/drift/summary
 ```json
 {
   "echo_model": {
-    "is_ready": true,
-    "reference_samples": 200,
-    "current_samples": 87,
+    "model_name": "echo_model",
+    "is_ready": false,
+    "reference_samples": 1,
+    "current_samples": 0,
     "total_alerts": 0,
+    "critical_alerts": 0,
+    "warning_alerts": 0,
+    "latest_alert": null
+  },
+  "classifier": {
+    "model_name": "classifier",
+    "is_ready": false,
+    "reference_samples": 0,
+    "current_samples": 0,
+    "total_alerts": 0,
+    "critical_alerts": 0,
+    "warning_alerts": 0,
     "latest_alert": null
   }
 }
 ```
+
+> Note: `is_ready` becomes `true` after 200 reference samples are collected.
 
 #### `GET /drift/alerts` — All drift alerts, newest first
 ```bash
@@ -460,16 +466,11 @@ curl http://localhost:8000/drift/alerts
 ```
 ```json
 {
-  "alerts": [{
-    "model_name": "echo_model",
-    "severity": "critical",
-    "p_value": 0.0001,
-    "ks_statistic": 0.82,
-    "recommendation": "🚨 Immediate action required! Consider rolling back.",
-    "timestamp": 1705312800.0
-  }]
+  "alerts": []
 }
 ```
+
+> Alerts appear here when KS test detects p-value < 0.05 (warning) or < 0.01 (critical).
 
 #### `GET /shadow/summary` — Shadow deployment comparison
 ```bash
@@ -477,12 +478,11 @@ curl http://localhost:8000/shadow/summary
 ```
 ```json
 {
-  "total_shadow_requests": 45,
-  "avg_latency_diff_ms": -2.3,
-  "shadow_ratio": 0.1,
-  "verdict": "✅ Shadow faster"
+  "total_shadow_requests": 0
 }
 ```
+
+> Shadow requests accumulate when `shadow_model` is set in `configs/models.yaml`.
 
 #### Other endpoints
 ```bash
@@ -805,12 +805,12 @@ Output:
 ║  Duration    : 30.0                          ║
 ╠══════════════════════════════════════════════╣
 ║  Total Req   : 4821                          ║
-║  Success     : 99.8 %                        ║
+║  Success     : 100.0 %                       ║
 ║  Throughput  : 160.70 rps                    ║
 ╠══════════════════════════════════════════════╣
-║  P50 Latency : 1.20 ms                       ║
-║  P95 Latency : 4.80 ms                       ║
-║  P99 Latency : 12.30 ms                      ║
+║  P50 Latency : 0.73 ms                       ║
+║  P95 Latency : 1.20 ms                       ║
+║  P99 Latency : 2.10 ms                       ║
 ╚══════════════════════════════════════════════╝
 ```
 
@@ -988,7 +988,7 @@ MIT License — see [LICENSE](LICENSE) for details.
 
 <div align="center">
 
-**Built from scratch — a production-grade ML systems portfolio project.**
+**Built from scratch — a production-grade ML systems project.**
 
 *If this helped you, please give it a ⭐*
 
